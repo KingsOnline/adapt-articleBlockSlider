@@ -35,7 +35,7 @@ define([
 
         _blockSliderPreRender: function() {
           console.log(this.model.get('_articleBlockSlider')._animationType);
-            this._disableAnimations = $('html').is(".ie8") || $('html').is(".iPhone.version-7\\.0") || this.model.get('_articleBlockSlider')._animationType == "none";
+            this._disableAnimations = $('html').is(".ie8") || $('html').is(".iPhone.version-7\\.0") || this.model.get('_articleBlockSlider')._animationType != "slide";
             this._blockSliderSetupEventListeners();
         },
 
@@ -268,8 +268,12 @@ define([
             
             if (animate === false) {
                 _.defer(_.bind(function(){
-                    $container.scrollLeft(totalLeft );
+                    $container.scrollLeft(totalLeft);
                     this._blockSliderHideOthers();
+                    if(this.model.get("_articleBlockSlider")._animationType == 'fade') {
+                      var allBlocks = this.model.getChildren().models;
+                      this.$('.block-inner').eq(this.model.get("_currentBlock")).css('opacity',0).animate({opacity:1}, duration);
+                    }
                 }, this));
             } else {
                 $container.stop(true).animate({scrollLeft:totalLeft}, duration, _.bind(function() {
