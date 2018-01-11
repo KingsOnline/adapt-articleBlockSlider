@@ -104,7 +104,7 @@ define([
                 itemButtons.push({
                     _className: (i === 0 ? "home" : "not-home") + (" i"+i),
                     _index: i,
-                    _includeNumber: i != 0,
+                    _includeNumber: i !== 0,
                     _title: blocks[i].get('title')
                 });
             }
@@ -145,10 +145,11 @@ define([
 
             $blocks.a11y_on(false).eq(_currentBlock).a11y_on(true);
             
-            _.delay(_.bind(function() {
-                if ($blocks.eq(_currentBlock).onscreen().onscreen) $blocks.eq(_currentBlock).a11y_focus();
-            }, this), duration);
-
+            if(Adapt.accessibility.isActive()) {// prevents https://github.com/cgkineo/adapt-articleBlockSlider/issues/28
+                _.delay(_.bind(function() {
+                    if ($blocks.eq(_currentBlock).onscreen().onscreen) $blocks.eq(_currentBlock).a11y_focus();
+                }, this), duration);
+            }
         },
 
         _blockSliderSetButtonLayout: function() {
@@ -161,27 +162,6 @@ define([
 
         _blockSliderPostRender: function() {
             this._blockSliderConfigureControls(false);
-
-            
-
-            if (this.model.get("_articleBlockSlider")._hasTabs) {
-                var parentHeight = this.$('.item-button').parent().height();
-                this.$('.item-button').css({
-                    height: parentHeight + 'px'
-                });
-
-                var toolbarHeight = this.$('.article-block-toolbar').height();
-                var additionalMargin = '30';
-                this.$('.article-block-toolbar').css({
-                    top: '-' + (toolbarHeight + (additionalMargin/2)) + 'px'
-                });
-
-                var toolbarMargin = parseFloat(toolbarHeight) + parseFloat(additionalMargin);
-                this.$('.article-block-slider').css({
-                    marginTop: toolbarMargin + 'px'
-                });
-                this._blockSliderSetButtonLayout();
-            }
 
             this._onBlockSliderDeviceChanged();
 
@@ -226,16 +206,17 @@ define([
             if (this.model.get("_currentBlock") === 0) return;
 
             var index = this.model.get("_currentBlock");
-            index--;
-            this._blockSliderMoveIndex(index);
+            this._blockSliderMoveIndex(--index);
         },
 
         _blockSliderMoveIndex: function(index, animate) {
             if (this.model.get("_currentBlock") != index) {
 
                 this.model.set("_currentBlock", index);
-                this._blockSliderSetVisible(this.model.getChildren().models[index], true);
+                
+                Adapt.trigger('media:stop');//in case any of the blocks contain media that's been left playing by the user
 
+                this._blockSliderSetVisible(this.model.getChildren().models[index], true);
                 this._blockSliderResizeHeight(animate);
                 this._blockSliderScrollToCurrent(animate);
                 this._blockSliderConfigureControls(animate);
@@ -259,8 +240,7 @@ define([
             if (this.model.get("_currentBlock") == this.model.get("_totalBlocks") - 1 ) return;
 
             var index = this.model.get("_currentBlock");
-            index++;
-            this._blockSliderMoveIndex(index);
+            this._blockSliderMoveIndex(++index);
         },
 
         _blockSliderScrollToCurrent: function(animate) {
@@ -279,7 +259,7 @@ define([
 
             var duration = this.model.get("_articleBlockSlider")._slideAnimationDuration || 200;
 
-            var currentBlock = this.model.get("_currentBlock")
+            var currentBlock = this.model.get("_currentBlock");
             var $currentBlock = $(blocks[currentBlock]);
 
             if (this._disableAnimationOnce) animate = false;
@@ -343,11 +323,10 @@ define([
         },
 
         _onBlockSliderResize: function() {
-            
             this._blockSliderResizeWidth(false);
             this._blockSliderResizeHeight(false);
             this._blockSliderScrollToCurrent(false);
-
+            this._blockSliderResizeTab();
         },
 
         _blockSliderResizeHeight: function(animate) {
@@ -366,10 +345,10 @@ define([
             var blockHeight = $blocks.eq(currentBlock).height();
 
             var maxHeight = -1;
-            $container.find(".block").each(function() { 
-            
-            if ($(this).height() > maxHeight)
-                maxHeight = $(this).height();
+            $container.find(".block").each(function() {
+                if ($(this).height() > maxHeight) {
+                    maxHeight = $(this).height();
+                }
             });
 
             var duration = (this.model.get("_articleBlockSlider")._heightAnimationDuration || 200) * 2;
@@ -405,6 +384,33 @@ define([
             if (minHeight) {
                 $container.css({"min-height": minHeight+"px"});
             }
+
+        },
+
+        _blockSliderResizeTab: function() {
+            if (!this.model.get("_articleBlockSlider")._hasTabs) return;
+
+            this._blockSliderSetButtonLayout();
+
+            this.$('.item-button').css({
+                height: ""
+            });
+
+            var parentHeight = this.$('.item-button').parent().height();
+            this.$('.item-button').css({
+                height: parentHeight + 'px'
+            });
+            
+            var toolbarHeight = this.$('.article-block-toolbar').height();
+            var additionalMargin = '30';
+            this.$('.article-block-toolbar').css({
+                top: '-' + (toolbarHeight + (additionalMargin/2)) + 'px'
+            });
+
+            var toolbarMargin = parseFloat(toolbarHeight) + parseFloat(additionalMargin);
+            this.$('.article-block-slider').css({
+                marginTop: toolbarMargin + 'px'
+            });
         },
 
         _blockSliderResizeWidth: function() {
@@ -455,7 +461,7 @@ define([
                 return;
             }
 
-            if (this.$el.find(selector).length == 0) return;
+            if (this.$el.find(selector).length === 0) return;
             
             var id = selector.substr(1);
 
@@ -476,7 +482,6 @@ define([
                     return;
                 }
             }
-
         },
 
         _onBlockSliderPageScrolledTo: function() {
