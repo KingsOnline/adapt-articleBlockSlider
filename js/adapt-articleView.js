@@ -34,7 +34,8 @@ define([
         },
 
         _blockSliderPreRender: function() {
-            this._disableAnimations = $('html').is(".ie8") || $('html').is(".iPhone.version-7\\.0");
+          console.log(this.model.get('_articleBlockSlider')._animationType);
+            this._disableAnimations = $('html').is(".ie8") || $('html').is(".iPhone.version-7\\.0") || this.model.get('_articleBlockSlider')._animationType == "none";
             this._blockSliderSetupEventListeners();
         },
 
