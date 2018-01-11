@@ -50,6 +50,16 @@
                   "validators": ["number"],
                   "help": "Sets the duration, in milliseconds, of the animation between varying blocks heights."
                 },
+                "_animationType": {
+                  "type": "string",
+                  "required": false,
+                  "default": "slide",
+                  "title": "Animation type",
+                  "inputType": {
+                    "type": "Select",
+                    "options": ["slide", "fade", "none"]
+                  }
+                },
                 "_isEnabledOnScreenSizes": {
                   "type": "string",
                   "required": false,
